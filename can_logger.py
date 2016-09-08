@@ -1,6 +1,6 @@
 import os
 from mutex import Mutex
-from pyb import CAN, rng
+from pyb import CAN, rng, delay
 from can import init_cans
 
 
@@ -49,6 +49,9 @@ def run_logger_test(max_iter_count=1000):
             print('Writing to CAN2: ', _id, data)
             print(_id, data, sep=',', file=f2)
             can2.send(data, _id)
+            print('Data sent, Delaying...')
+            delay(20)
+            print('Woke up')
 
             with flag_mutex:
                 print('Entered mutex')
@@ -73,11 +76,13 @@ def run_logger_test(max_iter_count=1000):
                     flags &= ~2
 
         while can1.any(0):
+            print('Receiving data')
             data = can1.recv(0)
             print(data)
             print(*data, sep=',', file=f1)
         
         while can1.any(1):
+            print('Receiving data')
             data = can1.recv(1)
             print(data)
             print(*data, sep=',', file=f1)
