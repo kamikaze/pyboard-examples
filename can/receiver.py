@@ -1,5 +1,5 @@
+import os
 from pyb import CAN, LED, disable_irq, enable_irq
-from can.logger import log
 
 
 SIGNALS = bytearray(1)
@@ -39,22 +39,31 @@ def listen_for_signals(can, leds):
     SIGNALS[0] &= 0b0
     state = None
 
-    while True:
-        if SIGNALS[0] & 0b1:
-            state = disable_irq()
-            SIGNALS[0] &= 0b0
-            enable_irq(state)
+    with open('/sd/can.log', 'a') as f:
+        try:
+            while True:
+                if SIGNALS[0] & 0b1:
+                    state = disable_irq()
+                    SIGNALS[0] &= 0b0
+                    enable_irq(state)
 
-            while can.any(0):
-                _id, rtr, fmi, data = can.recv(0, timeout=10000)
-                log(_id, rtr, fmi, str(data))
-                data = int.from_bytes(data)
+                    while can.any(0):
+                        _id, rtr, fmi, data = can.recv(0, timeout=10000)
+                        print(str(_id), '1' if rtr else '0', str(fmi), str(data), sep=',', file=f)
+                        #f.flush()
+                        data = int.from_bytes(data)
 
-                if _id == 11:
-                    if data & 0b100:
-                        leds[data & 0b11].on()
-                    else:
-                        leds[data & 0b11].off()
+                        if _id == 11:
+                            if data & 0b100:
+                                leds[data & 0b11].on()
+                            else:
+                                leds[data & 0b11].off()
+        except Exception as e:
+            print('Exception: {}'.format(e.message))
+        except KeyboardInterrupt as e:
+            print(e)
+
+    os.sync()
 
 
 def run_signal_listener():
