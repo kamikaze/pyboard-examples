@@ -10,7 +10,8 @@ def log_gps(uart, read_delay=100):
                     line = uart.readline()
                     print(line, file=f)
                     #print(line)
-            delay(read_delay)
+                f.flush()
+                delay(read_delay)
         except KeyboardInterrupt:
             pass
 
