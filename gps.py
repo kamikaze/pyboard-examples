@@ -1,4 +1,5 @@
 import os
+from gc import mem_free
 from pyb import wfi, UART, LED
 
 
@@ -18,24 +19,29 @@ def parse(line):
 
 def log_gps(uart, read_delay=100):
     led = LED(4)
-    with open('/sd/gps.log', 'w') as f:
+    with open('/sd/gps.log', 'a') as f:
+        print(file=f)
+
         try:
             while True:
+                led.on()
                 while uart.any():
                     line = str(uart.readline(), 'utf-8').rstrip()
                     print(line, file=f)
-                    #print(line)
                     parse(line)
+                    print(mem_free(), file=f)
+                    led.toggle()
 
                 f.flush()
-                led.toggle()
+                led.off()
                 wfi()
                 #delay(read_delay)
-        except KeyboardInterrupt:
-            pass
+        finally:
+            led.off()
+            LED(2).off()
+            LED(3).off()
+            os.sync()
 
-    led.off()
-    os.sync()
     LED(1).on()
 
 
