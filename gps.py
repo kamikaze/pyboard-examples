@@ -1,10 +1,12 @@
 import os
-from gc import mem_free
 from pyb import wfi, UART, LED
 
 
 def parse(line):
-    sentence, *data, checksum = line.split(',')
+    try:
+        sentence, *data, checksum = line.split(',')
+    except ValueError:
+        return
 
     if sentence == '$GPGGA':
         t, lat, lat_part, lng, lng_part, fix, sat_cnt, hdil, alt, _, geoid_height, _, _  = data
@@ -19,7 +21,7 @@ def parse(line):
 
 def log_gps(uart, read_delay=100):
     led = LED(4)
-    with open('/sd/gps.log', 'a') as f:
+    with open('/sd/gps.nmea', 'a') as f:
         print(file=f)
 
         try:
@@ -29,7 +31,6 @@ def log_gps(uart, read_delay=100):
                     line = str(uart.readline(), 'utf-8').rstrip()
                     print(line, file=f)
                     parse(line)
-                    print(mem_free(), file=f)
                     led.toggle()
 
                 f.flush()
