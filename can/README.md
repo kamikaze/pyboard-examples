@@ -22,7 +22,7 @@ receiver.run_signal_listener()
 
 ## Twin CAN transceiver board test
 
-This test sends data through CAN1 interface and reads it back via CAN2 and prints it. In case of separate CAN transceivers - they both should be connected to the same PyBoard.
+This test sends data through CAN2 interface and reads it back via CAN1 and prints it. In case of separate CAN transceivers - they both should be connected to the same PyBoard.
 
 
 ```python
