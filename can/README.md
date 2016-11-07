@@ -29,3 +29,11 @@ Twin CAN transceiver board test
 ======
 
 This test sends data through CAN1 interface and reads it back via CAN2 and prints it. In case of separate CAN transceivers - they both should be connected to the same PyBoard.
+
+
+```python
+from can import twin
+
+
+twin.run_twin_test()
+```
