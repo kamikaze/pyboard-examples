@@ -101,6 +101,13 @@ class SSD1322(DisplaySPI):
         self._write(self.CMD_WRITE_RAM)
 
         self._write(None, bytes([grade if x % 2 else grade << 4]))
+    
+    def send_buffer(buffer):
+        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
+        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
+        self._write(self.CMD_WRITE_RAM)
+
+        self._write(None, buffer)
 
     def checkerboard_even(self):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
