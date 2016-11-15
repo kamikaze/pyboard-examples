@@ -95,12 +95,17 @@ class SSD1322(DisplaySPI):
     
         self._write(self.CMD_SET_DISPLAY_MODE_NORMAL)
 
-    def checkerboard_even(self):
+    def set_pixel(self, x, y, grade):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
         self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
         self._write(self.CMD_WRITE_RAM)
 
-        
+        self._write(None, bytes([grade if x % 2 else grade << 4]))
+
+    def checkerboard_even(self):
+        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
+        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
+        self._write(self.CMD_WRITE_RAM)
 
         for y in range(0x77*0x40-1):
             self._write(None, b'\xf0')
