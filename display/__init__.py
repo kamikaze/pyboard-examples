@@ -1,3 +1,6 @@
+import time
+
+
 class Display:
     _INIT = ()
 
