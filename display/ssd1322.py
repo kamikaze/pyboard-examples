@@ -73,7 +73,7 @@ class SSD1322(DisplaySPI):
 
     def init(self):
         super().init()
-        self.framebuf = bytearray(self.height * self.width // 2)
+        self.framebuf = bytearray(self.height * self.width)
         #self.fill_ram(b'\x00')
 
     def fill_buffer(self, value):
