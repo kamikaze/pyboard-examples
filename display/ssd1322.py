@@ -74,17 +74,17 @@ class SSD1322(DisplaySPI):
             self.framebuf[i] = value
 
     def send_buffer(self):
-        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
-        self._write(self.CMD_WRITE_RAM)
+        self.write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
+        self.write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
+        self.write(self.CMD_WRITE_RAM)
 
-        self._write(None, self.framebuf)
+        self.write(None, self.framebuf)
 
     def send_buffer_one_by_one(self):
-        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
-        self._write(self.CMD_WRITE_RAM)
+        self.write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
+        self.write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
+        self.write(self.CMD_WRITE_RAM)
 
         for value in self.framebuf:
-            self._write(None, bytes([value]))
+            self.write(None, bytes([value]))
 
