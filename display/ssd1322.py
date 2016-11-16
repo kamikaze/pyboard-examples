@@ -112,9 +112,12 @@ class SSD1322(DisplaySPI):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
         self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
         self._write(self.CMD_WRITE_RAM)
+        i = 0
 
         for value in self.framebuf:
-            self._write(None, bytes(value))
+            print(i)
+            self._write(None, bytes([value]))
+            i += 1
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
         super().__init__(spi, dc, cs, rst, width, height)
