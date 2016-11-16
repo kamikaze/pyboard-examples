@@ -1,4 +1,4 @@
-from display.rgb import DisplaySPI
+from display import DisplaySPI
 
 
 class SSD1322(DisplaySPI):
@@ -33,10 +33,6 @@ class SSD1322(DisplaySPI):
     CMD_SET_MUX_RATIO = const(0xca)
     CMD_SET_COMMAND_LOCK = const(0xfd)
 
-    _COLUMN_SET = CMD_SET_COLUMN_ADDRESS
-    _PAGE_SET = CMD_SET_ROW_ADDRESS
-    _RAM_WRITE = CMD_WRITE_RAM
-    _RAM_READ = CMD_READ_RAM
     _INIT = (
         (CMD_SET_COMMAND_LOCK, b'\x12'),
         (CMD_SET_FRONT_CLOCK_DIVIDER_AND_OSCILLATOR_FREQUENCY, b'\xd0'),
@@ -60,7 +56,6 @@ class SSD1322(DisplaySPI):
         (CMD_SET_SLEEP_MODE_OFF, None),
     )
 
-
 #  displaySend(SEND_CMD, 0xB4); // Display Enhancement A
 #  displaySend(SEND_DAT, 0xA0); // = Enable external VSL
 #  displaySend(SEND_DAT, 0xB5); // = Normal (reset)
@@ -68,38 +63,15 @@ class SSD1322(DisplaySPI):
 #  displaySenddd(SEND_CMD, 0xD1); // Display Enhancement B
 #  displaySend(SEND_DAT, 0xA2); // = Normal (reset)
 #  displaySend(SEND_DAT, 0x20); // n/a
-    _ENCODE_PIXEL = ">H"
-    _ENCODE_POS = ">BB"
 
-    def init(self):
-        super().init()
-        self.framebuf = bytearray(self.height * self.width)
-        #self.fill_ram(b'\x00')
+    def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
+        super().__init__(spi, dc, cs, rst, width, height)
 
     def fill_buffer(self, value):
         value = 0xF0 & value << 4 ^ 0x0F & value
 
         for i in range(len(self.framebuf)):
             self.framebuf[i] = value
-
-    def fill_ram(self, value):
-        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
-        self._write(self.CMD_WRITE_RAM)
-        
-        for i in range(0x77*0x40):
-            self._write(None, value)
-
-    def clear_ram(self):
-        self._write(self.CMD_SET_DISPLAY_MODE_OFF)
-        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
-        self._write(self.CMD_WRITE_RAM)
-
-        for y in range(0x77*0x40):
-            self._write(None, b'\x00\x00')
-    
-        self._write(self.CMD_SET_DISPLAY_MODE_NORMAL)
 
     def send_buffer(self):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
@@ -112,13 +84,7 @@ class SSD1322(DisplaySPI):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
         self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
         self._write(self.CMD_WRITE_RAM)
-        i = 0
 
         for value in self.framebuf:
-            print(i)
             self._write(None, bytes([value]))
-            i += 1
-
-    def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
-        super().__init__(spi, dc, cs, rst, width, height)
 
