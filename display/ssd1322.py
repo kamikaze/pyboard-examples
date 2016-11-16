@@ -73,7 +73,14 @@ class SSD1322(DisplaySPI):
 
     def init(self):
         super().init()
+        self.framebuf = bytearray(self.height * self.width // 2)
         #self.fill_ram(b'\x00')
+
+    def fill_buffer(self, value):
+        value = 0xF0 & value << 4 ^ 0x0F & value
+
+        for i in range(len(self.framebuf)):
+            self.framebuf[i] = value
 
     def fill_ram(self, value):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
@@ -82,9 +89,8 @@ class SSD1322(DisplaySPI):
         
         for i in range(0x77*0x40):
             self._write(None, value)
-            self._write(None, value)
 
-    def clear(self):
+    def clear_ram(self):
         self._write(self.CMD_SET_DISPLAY_MODE_OFF)
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
         self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
@@ -95,38 +101,20 @@ class SSD1322(DisplaySPI):
     
         self._write(self.CMD_SET_DISPLAY_MODE_NORMAL)
 
-    def set_pixel(self, x, y, grade):
+    def send_buffer(self):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
         self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
         self._write(self.CMD_WRITE_RAM)
 
-        self._write(None, bytes([grade if x % 2 else grade << 4]))
-    
-    def send_buffer(buffer):
+        self._write(None, self.framebuf)
+
+    def send_buffer_one_by_one(self):
         self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
         self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
         self._write(self.CMD_WRITE_RAM)
 
-        self._write(None, buffer)
-
-    def checkerboard_even(self):
-        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
-        self._write(self.CMD_WRITE_RAM)
-
-        for y in range(0x77*0x40-1):
-            self._write(None, b'\xf0')
-
-
-    def checkerboard_odd(self):
-        self._write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self._write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
-        self._write(self.CMD_WRITE_RAM)
-    
-        for y in range(self.height):
-            for x in range(120/2):
-                self._write(None, b'\x0f\x0f')
-    
+        for value in self.framebuf:
+            self._write(None, bytes(value))
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
         super().__init__(spi, dc, cs, rst, width, height)
