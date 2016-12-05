@@ -29,8 +29,9 @@ class DisplaySPI(Display):
         super().__init__(width, height)
 
     def reset(self):
+        time.sleep_ms(100)
         self.rst.low()
-        time.sleep_ms(50)
+        time.sleep_ms(400)
         self.rst.high()
         time.sleep_ms(50)
 

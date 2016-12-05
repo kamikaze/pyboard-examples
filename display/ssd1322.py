@@ -31,38 +31,36 @@ class SSD1322(DisplaySPI):
     CMD_SET_CONTRAST_CURRENT = const(0xc1)
     CMD_MASTER_CONTRAST_CURRENT_CONTROL = const(0xc7)
     CMD_SET_MUX_RATIO = const(0xca)
+    CMD_SET_DISPLAY_ENHANCEMENT_B = const(0xd1)
     CMD_SET_COMMAND_LOCK = const(0xfd)
 
     _INIT = (
         (CMD_SET_COMMAND_LOCK, b'\x12'),
-        (CMD_SET_FRONT_CLOCK_DIVIDER_AND_OSCILLATOR_FREQUENCY, b'\xd0'),
+        (CMD_SET_DISPLAY_MODE_OFF, None),
+        (CMD_SET_COLUMN_ADDRESS, b'\x1c\x5b'),
+        (CMD_SET_ROW_ADDRESS, b'\x00\x3f'),
+        (CMD_SET_FRONT_CLOCK_DIVIDER_AND_OSCILLATOR_FREQUENCY, b'\x91'),
+
         (CMD_SET_MUX_RATIO, b'\x3f'),
         (CMD_SET_DISPLAY_OFFSET, b'\x00'),
         (CMD_SET_DISPLAY_START_LINE, b'\x00'),
         (CMD_SET_REMAP_AND_DUAL_COM_LINE_MODE, b'\x14\x11'),
         (CMD_SET_GPIO, b'\x00'),
         (CMD_SELECT_FUNCTION, b'\x01'),
-        (CMD_SET_CONTRAST_CURRENT, b'\x7f'),
+        (CMD_SET_DISPLAY_ENHANCEMENT_A, b'\xa0\xfd'),
+
+        (CMD_SET_CONTRAST_CURRENT, b'\x9f'),
         (CMD_MASTER_CONTRAST_CURRENT_CONTROL, b'\x0f'),
         (CMD_SELECT_DEFAULT_LINEAR_GRAY_SCALE_TABLE, None),
         (CMD_SET_PHASE_LENGTH, b'\xe2'),
-        #(CMD_SET_DISPLAY_ENHANCEMENT_A, b'\xa0\xfd'),
+        (CMD_SET_DISPLAY_ENHANCEMENT_B, b'\xa2\x20'),
         (CMD_SET_PRECHARGE_VOLTAGE, b'\x1f'),
         (CMD_SET_SECOND_PRECHARGE_PERIOD, b'\x08'),
         (CMD_SET_V_COMH, b'\x07'),
 
-#        (CMD_SET_SLEEP_MODE_ON, None),
         (CMD_SET_DISPLAY_MODE_NORMAL, None),
         (CMD_SET_SLEEP_MODE_OFF, None),
     )
-
-#  displaySend(SEND_CMD, 0xB4); // Display Enhancement A
-#  displaySend(SEND_DAT, 0xA0); // = Enable external VSL
-#  displaySend(SEND_DAT, 0xB5); // = Normal (reset)
-
-#  displaySenddd(SEND_CMD, 0xD1); // Display Enhancement B
-#  displaySend(SEND_DAT, 0xA2); // = Normal (reset)
-#  displaySend(SEND_DAT, 0x20); // n/a
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
         super().__init__(spi, dc, cs, rst, width, height)
