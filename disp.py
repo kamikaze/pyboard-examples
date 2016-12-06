@@ -3,7 +3,7 @@ from display import ssd1322
 
 
 def create_display():
-    spi = SPI(1, baudrate=3000000, polarity=0, phase=0)
+    spi = SPI(1, baudrate=10*1024*1024, polarity=0, phase=0)
     dc = Pin('Y2')
     res = Pin('Y1')
     cs = Pin('X5')
