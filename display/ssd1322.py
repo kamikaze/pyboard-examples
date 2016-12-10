@@ -1,3 +1,4 @@
+import framebuf
 from display import DisplaySPI
 
 
@@ -37,7 +38,8 @@ class SSD1322(DisplaySPI):
     _INIT = (
         (CMD_SET_COMMAND_LOCK, b'\x12'),
         (CMD_SET_DISPLAY_MODE_OFF, None),
-        (CMD_SET_COLUMN_ADDRESS, b'\x1c\x5b'),
+        (CMD_ENABLE_GRAY_SCALE_TABLE, None),
+        (CMD_SET_COLUMN_ADDRESS, b'\x00\x74'),
         (CMD_SET_ROW_ADDRESS, b'\x00\x3f'),
         (CMD_SET_FRONT_CLOCK_DIVIDER_AND_OSCILLATOR_FREQUENCY, b'\x91'),
 
@@ -64,25 +66,37 @@ class SSD1322(DisplaySPI):
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
         super().__init__(spi, dc, cs, rst, width, height)
+        self.buffer = bytearray(width * height // 2)
+        self.column_addr_limit = bytes([28, 91])
+        self.row_addr_limit = bytes([0, 63])
+        #self.framebuf = framebuf.FrameBuffer(self.buffer, width, height, framebuf.MONO4)
 
     def fill_buffer(self, value):
         value = 0xF0 & value << 4 ^ 0x0F & value
 
-        for i in range(len(self.framebuf)):
-            self.framebuf[i] = value
+        for i in range(len(self.buffer)):
+            self.buffer[i] = value
+
+    def show(self):
+        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
+        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
+        self.write(self.CMD_WRITE_RAM)
+
+        self.write(None, self.buffer)
+
 
     def send_buffer(self):
-        self.write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self.write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
+        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
+        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
         self.write(self.CMD_WRITE_RAM)
 
-        self.write(None, self.framebuf)
+        self.write(None, self.buffer)
 
     def send_buffer_one_by_one(self):
-        self.write(self.CMD_SET_COLUMN_ADDRESS, b'\x00\x77')
-        self.write(self.CMD_SET_ROW_ADDRESS, b'\x00\x40')
+        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
+        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
         self.write(self.CMD_WRITE_RAM)
 
-        for value in self.framebuf:
+        for value in self.buffer:
             self.write(None, bytes([value]))
 
