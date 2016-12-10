@@ -71,6 +71,12 @@ class SSD1322(DisplaySPI):
         self.row_addr_limit = bytes([0, 63])
         #self.framebuf = framebuf.FrameBuffer(self.buffer, width, height, framebuf.MONO4)
 
+    def copy_to_buffer(self, data):
+        self.buffer[:] = data
+
+    def replace_buffer(self, data):
+        self.buffer = data
+
     def fill_buffer(self, value):
         value = 0xF0 & value << 4 ^ 0x0F & value
 
