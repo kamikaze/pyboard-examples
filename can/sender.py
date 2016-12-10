@@ -16,8 +16,8 @@ from time import ticks_us, ticks_diff
 
 
 def init_cans():
-    can1 = CAN(1, CAN.NORMAL)
-    can2 = CAN(2, CAN.NORMAL)
+    can1 = CAN(1, CAN.NORMAL, prescaler=2, sjw=1, bs1=14, bs2=6)
+    can2 = CAN(2, CAN.NORMAL, prescaler=2, sjw=1, bs1=14, bs2=6)
     can1.setfilter(0, CAN.LIST16, 0, (23, 24, 25, 26))
     can1.setfilter(1, CAN.LIST16, 1, (33, 34, 35, 36))
 

@@ -19,8 +19,8 @@ def cb10(bus, reason):
 
 
 def _init_cans():
-    can1 = CAN(1, CAN.NORMAL)
-    can2 = CAN(2, CAN.NORMAL)
+    can1 = CAN(1, CAN.NORMAL, prescaler=2, sjw=1, bs1=14, bs2=6)
+    can2 = CAN(2, CAN.NORMAL, prescaler=2, sjw=1, bs1=14, bs2=6)
     can1.setfilter(0, CAN.LIST16, 0, (11, 12, 13, 14))
     can1.setfilter(1, CAN.LIST16, 1, (21, 22, 23, 24))
 
@@ -51,7 +51,7 @@ def listen_for_signals(can, leds):
                         _id, rtr, fmi, data = can.recv(0, timeout=10000)
                         print(str(_id), '1' if rtr else '0', str(fmi), str(data), sep=',', file=f)
                         #f.flush()
-                        data = int.from_bytes(data)
+                        data = int.from_bytes(data, 'little')
 
                         if _id == 11:
                             if data & 0b100:
@@ -59,15 +59,35 @@ def listen_for_signals(can, leds):
                             else:
                                 leds[data & 0b11].off()
         except Exception as e:
-            print('Exception: {}'.format(e.message))
+            print('Exception: {}'.format(e))
         except KeyboardInterrupt as e:
             print(e)
 
     os.sync()
 
 
+def listen_for_benchmark(can):
+    global SIGNALS
+    SIGNALS[0] &= 0
+    state = None
+
+    while True:
+        if SIGNALS[0] & 1:
+            state = disable_irq()
+            SIGNALS[0] &= 0
+            enable_irq(state)
+
+            while can.any(0):
+                can.recv(0, timeout=10000)
+
+
 def run_signal_listener():
     leds = [LED(1), LED(2), LED(3), LED(4)]
     can1, _ = _init_cans()
     listen_for_signals(can1, leds)
+
+
+def run_benchmark_listener():
+    can1, _ = _init_cans()
+    listen_for_benchmark(can1)
 
