@@ -1,5 +1,5 @@
 import framebuf
-from display import DisplaySPI
+from display.common import DisplaySPI
 
 
 class SSD1322(DisplaySPI):
