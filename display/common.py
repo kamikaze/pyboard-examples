@@ -29,23 +29,23 @@ class DisplaySPI(Display):
 
     def reset(self):
         time.sleep_ms(100)
-        self.rst.low()
+        self.rst.value(0)
         time.sleep_ms(400)
-        self.rst.high()
+        self.rst.value(1)
         time.sleep_ms(50)
 
     def write(self, command=None, data=None):
         if command is not None:
-            self.dc.low()
-            self.cs.low()
+            self.dc.value(0)
+            self.cs.value(0)
             self.spi.write(bytearray([command]))
-            self.cs.high()
+            self.cs.value(1)
 
         if data is not None:
-            self.dc.high()
-            self.cs.low()
+            self.dc.value(1)
+            self.cs.value(0)
             self.spi.write(data)
-            self.cs.high()
+            self.cs.value(1)
 
     def read(self, command=None, count=0):
         self.dc.low()

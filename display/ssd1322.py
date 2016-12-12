@@ -1,4 +1,4 @@
-import framebuf
+#import framebuf
 from display.common import DisplaySPI
 
 
@@ -61,7 +61,7 @@ class SSD1322(DisplaySPI):
         (CMD_SET_V_COMH, b'\x07'),
 
         (CMD_SET_DISPLAY_MODE_NORMAL, None),
-        (CMD_SET_SLEEP_MODE_OFF, None),
+        (CMD_SET_SLEEP_MODE_OFF, None), # Warning!!! When displays turns sleep mode off - PyBoard`s SD card dies.
     )
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
