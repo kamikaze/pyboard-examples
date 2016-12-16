@@ -64,16 +64,14 @@ class SSD1322(DisplaySPI):
     )
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
-        super().__init__(spi, dc, cs, rst, width, height)
         self.buffer = bytearray(width * height // 2)
-        self.column_addr_limit = bytes([28, 91])
-        self.row_addr_limit = bytes([0, 63])
+        self.column_addr_limit = bytes([28, 91]) #TODO: autoadjust depending on width. it should be centered I guess
+        self.row_addr_limit = bytes([0, height-1])
+        super().__init__(spi, dc, cs, rst, width, height)
 
     def fill_buffer(self, value):
-        value = 0xF0 & value << 4 ^ 0x0F & value
-
         for i in range(len(self.buffer)):
-            self.buffer[i] = value
+            self.buffer[i] = value << 4 ^ 0xF & value
 
     def show(self):
         self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
