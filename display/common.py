@@ -47,17 +47,3 @@ class DisplaySPI(Display):
             self.spi.write(data)
             self.cs.value(1)
 
-    def read(self, command=None, count=0):
-        self.dc.low()
-        self.cs.low()
-
-        if command is not None:
-            self.spi.write(bytearray([command]))
-
-        if count:
-            data = self.spi.read(count)
-
-        self.cs.high()
-
-        return data
-
