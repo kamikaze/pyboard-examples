@@ -10,6 +10,9 @@ class Display:
 
         for command, data in self._INIT:
             self.write(command, data)
+    
+    def readfrom(self, file, direct=True):
+        raise NotImplementedError
 
 
 class DisplaySPI(Display):

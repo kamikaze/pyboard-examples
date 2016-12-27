@@ -1,4 +1,3 @@
-#import framebuf
 from display.common import DisplaySPI
 
 
@@ -61,27 +60,18 @@ class SSD1322(DisplaySPI):
         (CMD_SET_V_COMH, b'\x07'),
 
         (CMD_SET_DISPLAY_MODE_NORMAL, None),
-        (CMD_SET_SLEEP_MODE_OFF, None), # Warning!!! When displays turns sleep mode off - PyBoard`s SD card dies.
+        (CMD_SET_SLEEP_MODE_OFF, None),
     )
 
     def __init__(self, spi, dc, cs, rst=None, width=256, height=64):
-        super().__init__(spi, dc, cs, rst, width, height)
         self.buffer = bytearray(width * height // 2)
-        self.column_addr_limit = bytes([28, 91])
-        self.row_addr_limit = bytes([0, 63])
-        #self.framebuf = framebuf.FrameBuffer(self.buffer, width, height, framebuf.MONO4)
-
-    def copy_to_buffer(self, data):
-        self.buffer[:] = data
-
-    def replace_buffer(self, data):
-        self.buffer = data
+        self.column_addr_limit = bytes([28, 91]) #TODO: autoadjust depending on width. it should be centered I guess
+        self.row_addr_limit = bytes([0, height-1])
+        super().__init__(spi, dc, cs, rst, width, height)
 
     def fill_buffer(self, value):
-        value = 0xF0 & value << 4 ^ 0x0F & value
-
         for i in range(len(self.buffer)):
-            self.buffer[i] = value
+            self.buffer[i] = value << 4 ^ 0xF & value
 
     def show(self):
         self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
@@ -89,7 +79,6 @@ class SSD1322(DisplaySPI):
         self.write(self.CMD_WRITE_RAM)
 
         self.write(None, self.buffer)
-
 
     def send_buffer(self):
         self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
