@@ -1,19 +1,26 @@
-from machine import I2C, SPI
+from math import atan2, pi
+
+from pyb import delay
+from machine import I2C
+
 import display
+from imu.lsm303 import LSM303
 
 
-LSM303_ADDRESS_ACCEL = 0x32 >> 1
-LSM303_ADDRESS_MAG = 0x3C >> 1
- 
-LSM303_REGISTER_ACCEL_CTRL_REG1_A = 0x20
-LSM303_REGISTER_MAG_MR_REG_M = 0x02
-LSM303_REGISTER_MAG_OUT_X_H_M = 0x03
-LSM303_REGISTER_ACCEL_OUT_X_L_A = 0x28
+def run_imu_test(i2c_bus=2):
+    disp = display.create_display()
+    i2c = I2C(i2c_bus, freq=400000)
+    devices = i2c.scan()
+    lsm303 = LSM303(i2c)
 
-disp = display.create_display()
-i2c = I2C(2, freq=400000)
+    while True:
+        accel, mag = lsm303.read()
+        x, y, z = accel
+        x, z, y = mag
 
-devices = i2c.scan()
+        h = atan2(y, x) * 180.0 / pi
 
-x, y, z = 0, 0, 0
+        print('Rotation from north (deg): {}'.format(h))
+
+        delay(500)
 
