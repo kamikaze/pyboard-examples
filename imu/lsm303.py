@@ -23,12 +23,7 @@ class LSM303(object):
         self.i2c = i2c
         self._data = bytearray(6)
         i2c.writeto_mem(self.ADDRESS_ACCEL, self.REGISTER_ACCEL_CTRL_REG1_A, bytearray([0x27]))
-
-        if hires:
-            i2c.writeto_mem(self.ADDRESS_ACCEL, self.REGISTER_ACCEL_CTRL_REG4_A, bytearray([0b00001000]))
-        else:
-            i2c.writeto_mem(self.ADDRESS_ACCEL, self.REGISTER_ACCEL_CTRL_REG4_A, bytearray([0x00]))
-
+        i2c.writeto_mem(self.ADDRESS_ACCEL, self.REGISTER_ACCEL_CTRL_REG4_A, bytearray([0b00001000 if hires else 0]))
         i2c.writeto_mem(self.ADDRESS_MAG, self.REGISTER_MAG_MR_REG_M, bytearray([0x00]))
 
     def read(self):
