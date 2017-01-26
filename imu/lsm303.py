@@ -1,7 +1,7 @@
 import struct
 
 
-class LSM303(object):
+class LSM303D(object):
     ADDRESS_ACCEL = (0x32 >> 1)  # 0011001x
     ADDRESS_MAG   = (0x3C >> 1)  # 0011110x
     REGISTER_ACCEL_CTRL_REG1_A = 0x20 # 00000111   rw
