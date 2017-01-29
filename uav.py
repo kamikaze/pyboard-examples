@@ -72,7 +72,7 @@ def run_uav_test(i2c_bus=2):
             nmea_line = None
 
         # displaying data
-        d.framebuf.fill_rect(0, 0, 128, 24, 0x00)
+        d.framebuf.fill_rect(0, 0, 255, 32, 0x00)
         d.framebuf.text('N: {}'.format(h), 0, 0, 0x0F)
         pos = uav['pos']
         d.framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 8, 0xF)
