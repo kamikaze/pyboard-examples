@@ -41,7 +41,6 @@ def update_gps_data(line):
         uav['pos']['lon_part'] = lon_part
         dt = ('20'+d[4:6], d[2:4], d[0:2], '1', t[0:2], t[2:4], t[4:6], '0')
         dt = list(map(int, dt))
-        print(dt)
         rtc.datetime(dt)
 
 
