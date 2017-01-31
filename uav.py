@@ -10,13 +10,22 @@ from imu.lsm303 import LSM303D
 
 rtc = RTC()
 uav = {
+    'imu': {
+    },
     'pos': {
+        'alt': .0,
         'lat': .0,
         'lat_part': 'N',
         'lon': .0,
-        'lon_part': 'E'
+        'lon_part': 'E',
+        'hdg': .0
     }
 }
+
+
+def process_telemetry(sentence, data, checksum):
+    if sentence == '$EXINJ':
+        uav['pos']['hdg'] = float(data[0])
 
 
 def update_gps_data(line):
@@ -28,6 +37,7 @@ def update_gps_data(line):
     if sentence == '$GPGGA':
         t, lat, lat_part, lon, lon_part, fix, sat_cnt, hdil, alt, _, geoid_height, _, _  = data
 
+        uav['pos']['alt'] = float(alt)
         uav['pos']['lat'] = float(lat) / 100.0
         uav['pos']['lon'] = float(lon) / 100.0
         uav['pos']['lat_part'] = lat_part
@@ -42,6 +52,8 @@ def update_gps_data(line):
         dt = ('20'+d[4:6], d[2:4], d[0:2], '1', t[0:2], t[2:4], t[4:6], '0')
         dt = list(map(int, dt))
         rtc.datetime(dt)
+    else:
+        process_telemetry(sentence, data, checksum)
 
 
 def run_uav_test(i2c_bus=2):
@@ -71,19 +83,19 @@ def run_uav_test(i2c_bus=2):
             nmea_line = None
 
         # displaying data
-        d.framebuf.fill_rect(0, 0, 255, 32, 0x00)
-        d.framebuf.text('N: {}'.format(h), 0, 0, 0x0F)
+        d.framebuf.fill(0)
+        d.framebuf.text('N: {}'.format(h), 0, 0, 0xF)
         pos = uav['pos']
-        d.framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 8, 0xF)
-        d.framebuf.text('LON: {:10.6f} {}'.format(pos['lon'], pos['lon_part']), 0, 16, 0xF)
-        d.framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 24, 0xF)
-
-        d.framebuf.fill_rect(127 if w > 0 else 127 + w, 56, abs(w), 8, 0)
+        d.framebuf.text('HDG: {:6.3f}'.format(pos['hdg']), 0, 8, 0xF)
+        d.framebuf.text('ALT: {:6.1f} M'.format(pos['alt']), 0, 16, 0xF)
+        d.framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 24, 0xF)
+        d.framebuf.text('LON: {:10.6f} {}'.format(pos['lon'], pos['lon_part']), 0, 32, 0xF)
+        d.framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 40, 0xF)
 
         w = int(h / 2)
 
-        d.framebuf.fill_rect(127 if w > 0 else 127 + w, 56, abs(w), 8, 0x0F)
+        d.framebuf.fill_rect(127 if w > 0 else 127 + w, 56, abs(w), 8, 0xF)
 
         d.send_buffer()
-        delay(25)
+        delay(50)
 
