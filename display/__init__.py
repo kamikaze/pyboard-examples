@@ -1,12 +1,11 @@
 from machine import SPI, Pin
-from display.ssd1322 import SSD1322
 
 
-def create_display():
-    spi = SPI(2, baudrate=20*1024*1024, polarity=0, phase=0)
-    dc = Pin('Y2')
-    res = Pin('Y1')
-    cs = Pin('Y5')
+def create_spi_display(cls, width, height, spi_bus=2, dc_pin='Y2', res_pin='Y1', cs_pin='Y5', baudrate=20*1024*1024, polarity=0, phase=0):
+    spi = SPI(spi_bus, baudrate=baudrate, polarity=polarity, phase=phase)
+    dc = Pin(dc_pin)
+    res = Pin(res_pin)
+    cs = Pin(cs_pin)
     
-    return SSD1322(spi, dc, cs, res, width=256, height=64)
+    return cls(spi, dc, cs, res, width=width, height=height)
 

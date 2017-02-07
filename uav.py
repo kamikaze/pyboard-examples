@@ -5,6 +5,7 @@ from pyb import delay, RTC, USB_VCP
 from machine import I2C
 
 import display
+from display.ssd1322 import SSD1322
 from imu.lsm303 import LSM303D
 
 
@@ -20,6 +21,9 @@ uav = {
         'lon_part': 'E',
         'hdg': .0
     }
+}
+screens = {
+    
 }
 
 
@@ -60,7 +64,7 @@ def run_uav_test(i2c_bus=2):
     serial_port = USB_VCP()
     nmea_line = None
     #serial_port.setinterrupt(-1)
-    d = display.create_display()
+    d = display.create_spi_display(SSD1322, 256, 64)
     i2c = I2C(i2c_bus, freq=400000)
     devices = i2c.scan()
     lsm303 = LSM303D(i2c)

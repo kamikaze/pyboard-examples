@@ -4,11 +4,12 @@ from pyb import delay
 from machine import I2C
 
 import display
+from display.ssd1322 import SSD1322
 from imu.lsm303 import LSM303D
 
 
 def run_imu_test(i2c_bus=2):
-    d = display.create_display()
+    d = display.create_spi_display(SSD1322, 256, 64)
     i2c = I2C(i2c_bus, freq=400000)
     devices = i2c.scan()
     lsm303 = LSM303D(i2c)

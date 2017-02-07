@@ -1,5 +1,6 @@
 import pyb
 import display
+from display.ssd1322 import SSD1322
 
 
 def run_animation(display, start=0, end=10, step=1, delay=10, from_sd=False):
@@ -12,7 +13,7 @@ def run_animation(display, start=0, end=10, step=1, delay=10, from_sd=False):
 
 
 def run_test(from_sd=False):
-    d = display.create_display()
+    d = display.create_spi_display(SSD1322, 256, 64)
     run_animation(d, end=248, from_sd=from_sd)
 
 
