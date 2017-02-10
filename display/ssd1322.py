@@ -73,29 +73,10 @@ class SSD1322(DisplaySPI):
         super().__init__(spi, dc, cs, rst, width, height)
         self.send_buffer()
 
-    def fill_buffer(self, value):
-        for i in range(len(self.buffer)):
-            self.buffer[i] = value << 4 ^ 0xF & value
-
-    def show(self):
-        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
-        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
-        self.write(self.CMD_WRITE_RAM)
-
-        self.write(None, self.buffer)
-
     def send_buffer(self):
         self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
         self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
         self.write(self.CMD_WRITE_RAM)
 
         self.write(None, self.buffer)
-
-    def send_buffer_one_by_one(self):
-        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
-        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
-        self.write(self.CMD_WRITE_RAM)
-
-        for value in self.buffer:
-            self.write(None, bytes([value]))
 
