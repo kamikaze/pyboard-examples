@@ -1,10 +1,9 @@
-import time
 import framebuf
 
 from display.common import DisplaySPI
 
 
-class SSD1322(DisplaySPI):
+class SSD1331(DisplaySPI):
     CMD_ENABLE_GRAY_SCALE_TABLE = const(0x00)
     CMD_SET_COLUMN_ADDRESS = const(0x15)
     CMD_WRITE_RAM = const(0x5c)
@@ -72,17 +71,18 @@ class SSD1322(DisplaySPI):
         self.column_addr_limit = bytes([28, 91]) #TODO: autoadjust depending on width. it should be centered I guess
         self.row_addr_limit = bytes([0, height-1])
         super().__init__(spi, dc, cs, rst, width, height)
+        self.send_buffer()
 
-    def reset(self):
-        time.sleep_ms(100)
-        self.rst.value(0)
-        time.sleep_ms(400)
-        self.rst.value(1)
-        time.sleep_ms(50)
+    def fill_buffer(self, value):
+        for i in range(len(self.buffer)):
+            self.buffer[i] = value << 4 ^ 0xF & value
 
-    def init_display(self):
-        for command, data in self._INIT:
-            self.write(command, data)
+    def show(self):
+        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
+        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
+        self.write(self.CMD_WRITE_RAM)
+
+        self.write(None, self.buffer)
 
     def send_buffer(self):
         self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
@@ -90,3 +90,12 @@ class SSD1322(DisplaySPI):
         self.write(self.CMD_WRITE_RAM)
 
         self.write(None, self.buffer)
+
+    def send_buffer_one_by_one(self):
+        self.write(self.CMD_SET_COLUMN_ADDRESS, self.column_addr_limit)
+        self.write(self.CMD_SET_ROW_ADDRESS, self.row_addr_limit)
+        self.write(self.CMD_WRITE_RAM)
+
+        for value in self.buffer:
+            self.write(None, bytes([value]))
+
