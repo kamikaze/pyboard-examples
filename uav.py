@@ -11,6 +11,7 @@ from imu.lsm303 import LSM303D
 
 SIGNALS = bytearray(1)
 SIGNAL_USR = 0b1
+CMD_HISTORY = {}
 
 rtc = RTC()
 uav = {
@@ -98,6 +99,16 @@ def switch_cb():
     SIGNALS[0] = SIGNALS[0] | SIGNAL_USR
 
 
+def send_command(serial_port, cmd_id, *data):
+    last_cmd = CMD_HISTORY.get(cmd_id)
+
+    if last_cmd == data:
+        return
+
+    serial_port.write('{},{}\n'.format(cmd_id, *data).encode('ascii'))
+    CMD_HISTORY[cmd_id] = data
+
+
 def run_uav_test(i2c_bus=2):
     global SIGNALS
     global SIGNAL_USR
@@ -134,6 +145,11 @@ def run_uav_test(i2c_bus=2):
         if nmea_line:
             update_gps_data(nmea_line)
             nmea_line = None
+
+        # sending orders
+
+        send_command(serial_port, 1, renderer_idx % 2)
+        send_command(serial_port, 2, 1 - renderer_idx % 2)
 
         if SIGNALS[0] & SIGNAL_USR:
             renderer_idx = renderer_idx + 1
