@@ -70,18 +70,14 @@ def update_gps_data(line):
 
 
 def render_gps_screen(framebuf, uav):
-    north = uav['imu']['north']
     pos = uav['pos']
-    w = int(north / 2)
 
     framebuf.fill(0)
-    framebuf.text('N: {}'.format(north), 0, 0, 0xF)
-    framebuf.text('HDG: {:6.3f}'.format(pos['hdg']), 0, 8, 0xF)
-    framebuf.text('ALT: {:6.1f} M'.format(pos['alt']), 0, 16, 0xF)
-    framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 24, 0xF)
-    framebuf.text('LON: {:10.6f} {}'.format(pos['lon'], pos['lon_part']), 0, 32, 0xF)
-    framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 40, 0xF)
-    framebuf.fill_rect(127 if w > 0 else 127 + w, 56, abs(w), 8, 0xF)
+    framebuf.text('HDG: {:6.3f}'.format(pos['hdg']), 0, 0, 0xF)
+    framebuf.text('ALT: {:6.1f} M'.format(pos['alt']), 0, 8, 0xF)
+    framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 16, 0xF)
+    framebuf.text('LON: {:10.6f} {}'.format(pos['lon'], pos['lon_part']), 0, 24, 0xF)
+    framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 32, 0xF)
 
 
 def render_hud_screen(framebuf, uav):
@@ -90,6 +86,15 @@ def render_hud_screen(framebuf, uav):
     framebuf.text('ROLL: {}'.format(imu['roll']), 0, 0, 0xF)
     framebuf.text('PITCH: {}'.format(imu['pitch']), 0, 8, 0xF)
     framebuf.text('YAW: {}'.format(imu['yaw']), 0, 16, 0xF)
+
+
+def render_imu_screen(framebuf, uav):
+    imu = uav['imu']
+    north = imu['north']
+    w = int(north / 2)
+    framebuf.fill(0)
+    framebuf.text('N: {}'.format(north), 0, 0, 0xF)
+    framebuf.fill_rect(127 if w > 0 else 127 + w, 56, abs(w), 8, 0xF)
 
 
 def switch_cb():
@@ -124,7 +129,7 @@ def run_uav_test(i2c_bus=2):
     switch = Switch()
     w = 0
 
-    screen_renderers = [render_gps_screen, render_hud_screen]
+    screen_renderers = [render_gps_screen, render_hud_screen, render_imu_screen]
     renderer_idx = 0
     render_screen = screen_renderers[renderer_idx]
 
