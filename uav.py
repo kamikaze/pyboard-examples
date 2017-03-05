@@ -1,7 +1,7 @@
 import struct
-from math import atan2, pi
+from math import atan2, copysign, pi
 
-from pyb import delay, Switch, RTC, USB_VCP
+from pyb import delay, millis, elapsed_millis, Switch, RTC, USB_VCP
 from machine import I2C
 
 import display
@@ -28,7 +28,8 @@ uav = {
         'lon': .0,
         'lon_part': 'E',
         'hdg': .0
-    }
+    },
+    'speed': 0
 }
 
 
@@ -62,6 +63,7 @@ def update_gps_data(line):
         uav['pos']['lon'] = float(lon) / 100.0
         uav['pos']['lat_part'] = lat_part
         uav['pos']['lon_part'] = lon_part
+        uav['speed'] = int(float(speed_over_ground))
         dt = ('20'+d[4:6], d[2:4], d[0:2], '1', t[0:2], t[2:4], t[4:6], '0')
         dt = list(map(int, dt))
         rtc.datetime(dt)
@@ -77,7 +79,8 @@ def render_gps_screen(framebuf, uav):
     framebuf.text('ALT: {:6.1f} M'.format(pos['alt']), 0, 8, 0xF)
     framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 16, 0xF)
     framebuf.text('LON: {:10.6f} {}'.format(pos['lon'], pos['lon_part']), 0, 24, 0xF)
-    framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 32, 0xF)
+    framebuf.text('SPEED {:.2f} kts'.format(uav['speed']), 0, 32, 0xF)
+    framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 40, 0xF)
 
 
 def render_hud_screen(framebuf, uav):
@@ -114,6 +117,26 @@ def send_command(serial_port, cmd_id, *data):
     CMD_HISTORY[cmd_id] = data
 
 
+def set_engine_throttle(serial_port, engine_id, value):
+    uav[''] = value
+    send_command(serial_port, engine_id, value)
+
+
+def pid(target, real, dt=1, kp=.4, ki=0, kd=0):
+    e_t = target - real
+    p_t = kp * e_t
+    i_t = 0
+    d_t = 0
+
+    return p_t + i_t + d_t
+
+
+def adjust_throttle(serial_port, pid_value):
+    value = 0 if pid_value <= 0 else 1
+    set_engine_throttle(serial_port, 1, value)
+    set_engine_throttle(serial_port, 2, value)
+
+
 def run_uav_test(i2c_bus=2):
     global SIGNALS
     global SIGNAL_USR
@@ -122,11 +145,13 @@ def run_uav_test(i2c_bus=2):
     serial_port = USB_VCP()
     nmea_line = None
     #serial_port.setinterrupt(-1)
-    d = display.create_spi_display(SSD1322, 256, 64)
+    disp = display.create_spi_display(SSD1322, 256, 64)
     i2c = I2C(i2c_bus, freq=400000)
     devices = i2c.scan()
     lsm303 = LSM303D(i2c)
     switch = Switch()
+    target_speed = 600
+    timestamp = None
     w = 0
 
     screen_renderers = [render_gps_screen, render_hud_screen, render_imu_screen]
@@ -152,17 +177,20 @@ def run_uav_test(i2c_bus=2):
             nmea_line = None
 
         # sending orders
+        if renderer_idx % 2:
+            if timestamp:
+                pid_value = pid(target_speed, uav['speed'], elapsed_millis(timestamp), .2)
+                adjust_throttle(serial_port, pid_value)
 
-        send_command(serial_port, 1, renderer_idx % 2)
-        send_command(serial_port, 2, 1 - renderer_idx % 2)
+            timestamp = millis()
 
         if SIGNALS[0] & SIGNAL_USR:
             renderer_idx = renderer_idx + 1
             render_screen = screen_renderers[renderer_idx % len(screen_renderers)]
             SIGNALS[0] = SIGNALS[0] & ~SIGNAL_USR
 
-        render_screen(d.framebuf, uav)
+        render_screen(disp.framebuf, uav)
 
-        d.send_buffer()
+        disp.send_buffer()
         delay(50)
 
