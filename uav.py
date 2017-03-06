@@ -11,10 +11,13 @@ from imu.lsm303 import LSM303D
 
 SIGNALS = bytearray(1)
 SIGNAL_USR = 0b1
-CMD_HISTORY = {}
 
 rtc = RTC()
 uav = {
+    'engines': {
+        0: {'throttle': None},
+        1: {'throttle': None}
+    },
     'imu': {
         'north': .0,
         'roll': .0,
@@ -108,18 +111,15 @@ def switch_cb():
 
 
 def send_command(serial_port, cmd_id, *data):
-    last_cmd = CMD_HISTORY.get(cmd_id)
-
-    if last_cmd == data:
-        return
-
     serial_port.write('{},{}\n'.format(cmd_id, *data).encode('ascii'))
-    CMD_HISTORY[cmd_id] = data
 
 
 def set_engine_throttle(serial_port, engine_id, value):
-    uav[''] = value
-    send_command(serial_port, engine_id, value)
+    engine = uav['engines'][engine_id]
+
+    if engine['throttle'] != value:
+        send_command(serial_port, engine_id+1, value)
+        engine['throttle'] = value
 
 
 def pid(target, real, dt=1, kp=.4, ki=0, kd=0):
@@ -133,8 +133,8 @@ def pid(target, real, dt=1, kp=.4, ki=0, kd=0):
 
 def adjust_throttle(serial_port, pid_value):
     value = 0 if pid_value <= 0 else 1
+    set_engine_throttle(serial_port, 0, value)
     set_engine_throttle(serial_port, 1, value)
-    set_engine_throttle(serial_port, 2, value)
 
 
 def run_uav_test(i2c_bus=2):
