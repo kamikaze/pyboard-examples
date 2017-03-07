@@ -15,8 +15,8 @@ SIGNAL_USR = 0b1
 rtc = RTC()
 uav = {
     'engines': {
-        0: {'throttle': None},
-        1: {'throttle': None}
+        0: {'throttle': .0},
+        1: {'throttle': .0}
     },
     'imu': {
         'north': .0,
@@ -122,7 +122,7 @@ def set_engine_throttle(serial_port, engine_id, value):
         engine['throttle'] = value
 
 
-def pid(target, real, dt=1, kp=.4, ki=0, kd=0):
+def pid(target, real, dt=1, kp=.1, ki=0, kd=0):
     e_t = target - real
     p_t = kp * e_t
     i_t = 0
@@ -132,7 +132,13 @@ def pid(target, real, dt=1, kp=.4, ki=0, kd=0):
 
 
 def adjust_throttle(serial_port, pid_value):
-    value = 0 if pid_value <= 0 else 1
+    value = uav['engines'][0]['throttle'] + pid_value
+
+    if value < 0:
+        value = 0
+    elif value > 1:
+        value = 1
+
     set_engine_throttle(serial_port, 0, value)
     set_engine_throttle(serial_port, 1, value)
 
@@ -150,7 +156,7 @@ def run_uav_test(i2c_bus=2):
     devices = i2c.scan()
     lsm303 = LSM303D(i2c)
     switch = Switch()
-    target_speed = 600
+    target_speed = 500
     timestamp = None
     w = 0
 
