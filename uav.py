@@ -15,8 +15,8 @@ SIGNAL_USR = 0b1
 rtc = RTC()
 uav = {
     'engines': {
-        0: {'throttle': .0},
-        1: {'throttle': .0}
+        0: {'throttle': None},
+        1: {'throttle': None}
     },
     'imu': {
         'north': .0,
@@ -34,6 +34,28 @@ uav = {
     },
     'speed': 0
 }
+
+
+class PID(object):
+    def __init__(self, target, kp=.0, ki=.0, kd=.0):
+        self.target = target
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.cum_error = .0
+        self.last_error = .0
+
+    def update(self, current_value, dt):
+        error = self.target - current_value
+        self.cum_error += error
+
+        p = self.kp * error
+        i = self.ki * self.cum_error
+        d = self.kd * (error - self.last_error)
+
+        self.last_error = error
+
+        return p+i+d
 
 
 def process_telemetry(sentence, data, checksum):
@@ -122,25 +144,14 @@ def set_engine_throttle(serial_port, engine_id, value):
         engine['throttle'] = value
 
 
-def pid(target, real, dt=1, kp=.1, ki=0, kd=0):
-    e_t = target - real
-    p_t = kp * e_t
-    i_t = 0
-    d_t = 0
-
-    return p_t + i_t + d_t
-
-
 def adjust_throttle(serial_port, pid_value):
-    value = uav['engines'][0]['throttle'] + pid_value
+    if pid_value < 0.2:
+        pid_value = 0.2
+    elif pid_value > 1:
+        pid_value = 1
 
-    if value < 0:
-        value = 0
-    elif value > 1:
-        value = 1
-
-    set_engine_throttle(serial_port, 0, value)
-    set_engine_throttle(serial_port, 1, value)
+    set_engine_throttle(serial_port, 0, pid_value)
+    set_engine_throttle(serial_port, 1, pid_value)
 
 
 def run_uav_test(i2c_bus=2):
@@ -156,7 +167,7 @@ def run_uav_test(i2c_bus=2):
     devices = i2c.scan()
     lsm303 = LSM303D(i2c)
     switch = Switch()
-    target_speed = 500
+    speed_pid = PID(target=500, kp=.4)
     timestamp = None
     w = 0
 
@@ -185,7 +196,7 @@ def run_uav_test(i2c_bus=2):
         # sending orders
         if renderer_idx % 2:
             if timestamp:
-                pid_value = pid(target_speed, uav['speed'], elapsed_millis(timestamp), .2)
+                pid_value = speed_pid.update(uav['speed'], elapsed_millis(timestamp))
                 adjust_throttle(serial_port, pid_value)
 
             timestamp = millis()
