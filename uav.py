@@ -37,21 +37,27 @@ uav = {
 
 
 class PID(object):
-    def __init__(self, target, kp=.0, ki=.0, kd=.0):
+    def __init__(self, target, kp=.0, ki=.0, kd=.0, windup=20):
         self.target = target
         self.kp = kp
         self.ki = ki
         self.kd = kd
         self.cum_error = .0
         self.last_error = .0
+        self.windup_guard = windup
 
     def update(self, current_value, dt):
         error = self.target - current_value
-        self.cum_error += error
+        self.cum_error += error * dt
+
+        if self.cum_error < -self.windup_guard:
+            self.cum_error = -self.windup_guard
+        elif self.cum_error > self.windup_guard:
+            self.cum_error = self.windup_guard
 
         p = self.kp * error
         i = self.ki * self.cum_error
-        d = self.kd * (error - self.last_error)
+        d = (self.kd * (error - self.last_error) / dt) if dt > 0 else 0
 
         self.last_error = error
 
@@ -167,7 +173,7 @@ def run_uav_test(i2c_bus=2):
     devices = i2c.scan()
     lsm303 = LSM303D(i2c)
     switch = Switch()
-    speed_pid = PID(target=500, kp=.4)
+    speed_pid = PID(target=500, kp=.4, ki=.2, kd=.1)
     timestamp = None
     w = 0
 
@@ -196,7 +202,7 @@ def run_uav_test(i2c_bus=2):
         # sending orders
         if renderer_idx % 2:
             if timestamp:
-                pid_value = speed_pid.update(uav['speed'], elapsed_millis(timestamp))
+                pid_value = speed_pid.update(uav['speed'], elapsed_millis(timestamp) / 1000.0)
                 adjust_throttle(serial_port, pid_value)
 
             timestamp = millis()
