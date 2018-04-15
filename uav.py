@@ -76,7 +76,7 @@ def process_telemetry(sentence, data, checksum):
         imu['pitch'] = float(data[2])
         imu['yaw'] = float(data[3])
     elif sentence == '$EXTPID':
-        pid: PID = uav['pid']
+        pid = uav['pid']
         pid.kp = float(data[0])
         pid.ki = float(data[1])
         pid.kd = float(data[2])
