@@ -80,7 +80,7 @@ def update_gps_data(line):
         return
 
     if sentence == '$GPGGA':
-        t, lat, lat_part, lon, lon_part, fix, sat_cnt, hdil, alt, _, geoid_height, _, _  = data
+        t, lat, lat_part, lon, lon_part, fix, sat_cnt, hdil, alt, _, geoid_height, _, _ = data
 
         uav['pos']['alt'] = float(alt)
         uav['pos']['lat'] = float(lat) / 100.0
@@ -167,7 +167,7 @@ def run_uav_test(i2c_bus=2):
     SIGNALS[0] = 0
     serial_port = USB_VCP()
     nmea_line = None
-    #serial_port.setinterrupt(-1)
+    # serial_port.setinterrupt(-1)
     disp = display.create_spi_display(SSD1322, 256, 64)
     i2c = I2C(i2c_bus, freq=400000)
     devices = i2c.scan()
@@ -216,4 +216,3 @@ def run_uav_test(i2c_bus=2):
 
         disp.send_buffer()
         delay(50)
-
