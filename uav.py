@@ -1,5 +1,4 @@
-import struct
-from math import atan2, copysign, pi
+from math import atan2, pi
 
 from pyb import delay, millis, elapsed_millis, Switch, RTC, USB_VCP
 from machine import I2C
@@ -32,7 +31,8 @@ uav = {
         'lon_part': 'E',
         'hdg': .0
     },
-    'speed': 0
+    'speed': 0,
+    'pid': None,
 }
 
 
@@ -45,6 +45,10 @@ class PID(object):
         self.cum_error = .0
         self.last_error = .0
         self.windup_guard = windup
+
+    def reset(self):
+        self.cum_error = .0
+        self.last_error = .0
 
     def update(self, current_value, dt):
         error = self.target - current_value
@@ -71,6 +75,12 @@ def process_telemetry(sentence, data, checksum):
         imu['roll'] = float(data[1])
         imu['pitch'] = float(data[2])
         imu['yaw'] = float(data[3])
+    elif sentence == '$EXTPID':
+        pid: PID = uav['pid']
+        pid.kp = float(data[0])
+        pid.ki = float(data[1])
+        pid.kd = float(data[2])
+        pid.reset()
 
 
 def update_gps_data(line):
@@ -174,6 +184,7 @@ def run_uav_test(i2c_bus=2):
     lsm303 = LSM303D(i2c)
     switch = Switch()
     speed_pid = PID(target=500, kp=.4, ki=.2, kd=.1)
+    uav['pid'] = speed_pid
     timestamp = None
     w = 0
 
