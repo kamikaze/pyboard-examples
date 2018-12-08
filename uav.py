@@ -37,7 +37,7 @@ uav = {
 
 
 class PID(object):
-    def __init__(self, target, kp=.0, ki=.0, kd=.0, windup=20):
+    def __init__(self, target, kp=.0, ki=.0, kd=.0, windup=10):
         self.target = target
         self.kp = kp
         self.ki = ki
@@ -114,14 +114,16 @@ def update_gps_data(line):
 
 def render_gps_screen(framebuf, uav):
     pos = uav['pos']
+    pid = uav['pid']
 
     framebuf.fill(0)
     framebuf.text('HDG: {:6.3f}'.format(pos['hdg']), 0, 0, 0xF)
     framebuf.text('ALT: {:6.1f} M'.format(pos['alt']), 0, 8, 0xF)
     framebuf.text('LAT: {:10.6f} {}'.format(pos['lat'], pos['lat_part']), 0, 16, 0xF)
     framebuf.text('LON: {:10.6f} {}'.format(pos['lon'], pos['lon_part']), 0, 24, 0xF)
-    framebuf.text('SPEED {:.2f} kts'.format(uav['speed']), 0, 32, 0xF)
-    framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 40, 0xF)
+    framebuf.text('SPEED {:.2f} ({}) kts'.format(uav['speed'], pid.target), 0, 32, 0xF)
+    framebuf.text('P: {:.5f} I: {:.5f} D: {:.5f}'.format(pid.kp, pid.ki, pid.kd), 0, 40, 0xF)
+    framebuf.text('TIME: {}'.format(' '.join(map(str, rtc.datetime()))), 0, 48, 0xF)
 
 
 def render_hud_screen(framebuf, uav):
