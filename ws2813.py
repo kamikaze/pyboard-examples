@@ -17,7 +17,8 @@ class WS2813:
         chain.show(data)
     Version: 1.0
     """
-    buf_bytes = (0x11, 0x13, 0x31, 0x33)
+    # buf_bytes = (0x11, 0x13, 0x31, 0x33)
+    buf_bytes = (0x88, 0x8e, 0xe8, 0xee)
 
     def __init__(self, spi_bus, led_count=1, intensity=1):
         """
@@ -114,4 +115,32 @@ class WS2813:
             buf[index] = off
 
             index += 1
+
+
+def wheel(pos):
+    if pos < 85:
+        return (pos*3, 255-pos*3, 0)
+    elif pos < 170:
+        pos -= 85
+
+        return (255-pos*3, 0, pos*3)
+    else:
+        pos -= 170
+
+        return (0, pos*3, 255-pos*3)
+
+
+def rainbow(led_strip, data, wait_ms=50):
+    led_count = len(data)
+
+    for j in range(256):
+        for q in range(3):
+            for i in range(0, led_count, 3):
+                data[i+q] = wheel((i+j) % 255)
+
+            led_strip.show(data)
+            pyb.delay(wait_ms)
+
+
+led_strip = WS2813(1, 5)
 
